@@ -48,10 +48,9 @@ async function fetchJson(url, timeoutMs = 10000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: { Accept: 'application/json' },
-    });
+    // No custom headers — keeps this a "simple" CORS request.
+    // FreeSerp's preflight does not allow Access-Control-Allow-Headers.
+    const response = await fetch(url, { signal: controller.signal });
     if (!response.ok) {
       const err = new Error(`HTTP ${response.status}`);
       err.status = response.status;
