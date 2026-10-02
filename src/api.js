@@ -1,6 +1,4 @@
 const API_URL = 'https://freeserp.ai/api.php';
-// Cloudflare Worker with a single clean ACAO header.
-const WORKER_URL = 'https://ai-radar-api.tarry-fold.workers.dev/';
 const DEV_PROXY = '/api/freeserp';
 
 const CLIENT = {
@@ -39,59 +37,22 @@ function buildUrl(base, params) {
     if (value === undefined || value === null || value === '') return;
     search.set(key, String(value));
   });
-
-  if (/^https?:\/\//i.test(base)) {
-    const url = new URL(base);
-    search.forEach((value, key) => url.searchParams.set(key, value));
-    return url.toString();
-  }
-
   return `${base}?${search.toString()}`;
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function fetchJson(url) {
-  const response = await fetch(url, {
-    method: 'GET',
-    mode: 'cors',
-    credentials: 'omit',
-    cache: 'no-store',
-  });
+async function get(params) {
+  const url = buildUrl(import.meta.env.DEV ? DEV_PROXY : API_URL, params);
+  const response = await fetch(url);
 
   if (!response.ok) {
-    const err = new Error(`HTTP ${response.status}`);
-    err.status = response.status;
-    throw err;
+    throw new Error(`Could not reach FreeSerp (${response.status}). Try again.`);
   }
 
   const data = await response.json();
-  if (!data || data.ok === false) {
+  if (!data?.ok) {
     throw new Error(data?.error || 'FreeSerp request failed');
   }
   return data;
-}
-
-async function get(params) {
-  const candidates = import.meta.env.DEV
-    ? [buildUrl(DEV_PROXY, params), buildUrl(WORKER_URL, params), buildUrl(API_URL, params)]
-    : [buildUrl(WORKER_URL, params), buildUrl(API_URL, params)];
-
-  let lastError;
-
-  for (const url of candidates) {
-    try {
-      return await fetchJson(url);
-    } catch (error) {
-      lastError = error;
-      await sleep(200);
-    }
-  }
-
-  const status = lastError?.status ? ` (${lastError.status})` : '';
-  throw new Error(`Could not reach FreeSerp${status}. Check your connection and try again.`);
 }
 
 export function searchSites({

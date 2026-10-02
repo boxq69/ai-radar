@@ -31,23 +31,12 @@ npm run build:gh
    - **Source:** GitHub Actions
 3. Open: https://boxq69.github.io/ai-radar/
 
-If an old deploy is still visible, hard-refresh (Cmd+Shift+R) or wait a minute for the CDN.
-
-If Actions fails with “in progress deployment”, cancel the older running deploy in the Actions tab, then re-run.
+If an old deploy is still visible, hard-refresh (Cmd+Shift+R).
 
 ## API
-
-Browser requests go through a small Cloudflare Worker proxy (`worker/`) so Chrome is not blocked by FreeSerp’s duplicate CORS headers. Direct FreeSerp remains the fallback.
 
 ```text
 GET https://freeserp.ai/api.php?index=sites&ai_startups=1&q=...&sort=went_live&order=desc
 ```
 
-No API key required.
-
-To redeploy the proxy:
-
-```bash
-cd worker
-npx wrangler deploy
-```
+No API key. The app calls FreeSerp directly from the browser.
