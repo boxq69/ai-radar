@@ -20,24 +20,34 @@ npm run dev
 
 ```bash
 npm run build
-# or explicitly:
+# or:
 npm run build:gh
 ```
 
 ## Deploy to GitHub Pages
 
-1. Push to `main` — Actions builds the app and publishes the `gh-pages` branch.
-2. In the repo open **Settings → Pages**:
-   - **Source:** Deploy from a branch
-   - **Branch:** `gh-pages` / `/ (root)`
+1. Push to `main` — GitHub Actions builds and deploys automatically.
+2. In **Settings → Pages**:
+   - **Source:** GitHub Actions
 3. Open: https://boxq69.github.io/ai-radar/
 
-If you see a blank page, Pages is still serving `main` (source files). Switch the branch to `gh-pages`.
+If an old deploy is still visible, hard-refresh (Cmd+Shift+R) or wait a minute for the CDN.
+
+If Actions fails with “in progress deployment”, cancel the older running deploy in the Actions tab, then re-run.
 
 ## API
+
+Browser requests go through a small Cloudflare Worker proxy (`worker/`) so Chrome is not blocked by FreeSerp’s duplicate CORS headers. Direct FreeSerp remains the fallback.
 
 ```text
 GET https://freeserp.ai/api.php?index=sites&ai_startups=1&q=...&sort=went_live&order=desc
 ```
 
 No API key required.
+
+To redeploy the proxy:
+
+```bash
+cd worker
+npx wrangler deploy
+```

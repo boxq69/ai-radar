@@ -1,4 +1,6 @@
 const API_URL = 'https://freeserp.ai/api.php';
+// Cloudflare Worker with a single clean ACAO header.
+const WORKER_URL = 'https://ai-radar-api.tarry-fold.workers.dev/';
 const DEV_PROXY = '/api/freeserp';
 
 const CLIENT = {
@@ -37,6 +39,13 @@ function buildUrl(base, params) {
     if (value === undefined || value === null || value === '') return;
     search.set(key, String(value));
   });
+
+  if (/^https?:\/\//i.test(base)) {
+    const url = new URL(base);
+    search.forEach((value, key) => url.searchParams.set(key, value));
+    return url.toString();
+  }
+
   return `${base}?${search.toString()}`;
 }
 
@@ -44,49 +53,40 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchJson(url, timeoutMs = 10000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    // No custom headers — keeps this a "simple" CORS request.
-    // FreeSerp's preflight does not allow Access-Control-Allow-Headers.
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) {
-      const err = new Error(`HTTP ${response.status}`);
-      err.status = response.status;
-      throw err;
-    }
-    const data = await response.json();
-    if (!data.ok) {
-      throw new Error(data.error || 'FreeSerp request failed');
-    }
-    return data;
-  } finally {
-    clearTimeout(timer);
-  }
-}
+async function fetchJson(url) {
+  const response = await fetch(url, {
+    method: 'GET',
+    mode: 'cors',
+    credentials: 'omit',
+    cache: 'no-store',
+  });
 
-function shouldRetry(error) {
-  return error?.status === 502 || error?.status === 503 || error?.name === 'AbortError';
+  if (!response.ok) {
+    const err = new Error(`HTTP ${response.status}`);
+    err.status = response.status;
+    throw err;
+  }
+
+  const data = await response.json();
+  if (!data || data.ok === false) {
+    throw new Error(data?.error || 'FreeSerp request failed');
+  }
+  return data;
 }
 
 async function get(params) {
-  const bases = import.meta.env.DEV ? [DEV_PROXY, API_URL] : [API_URL];
+  const candidates = import.meta.env.DEV
+    ? [buildUrl(DEV_PROXY, params), buildUrl(WORKER_URL, params), buildUrl(API_URL, params)]
+    : [buildUrl(WORKER_URL, params), buildUrl(API_URL, params)];
+
   let lastError;
 
-  for (const base of bases) {
+  for (const url of candidates) {
     try {
-      return await fetchJson(buildUrl(base, params));
+      return await fetchJson(url);
     } catch (error) {
       lastError = error;
-      if (shouldRetry(error)) {
-        await sleep(300);
-        try {
-          return await fetchJson(buildUrl(base, params));
-        } catch (retryError) {
-          lastError = retryError;
-        }
-      }
+      await sleep(200);
     }
   }
 
