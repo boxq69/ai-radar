@@ -1,5 +1,4 @@
-const API_URL = 'https://freeserp.ai/api.php';
-const DEV_PROXY = '/api/freeserp';
+const API_PATH = `${import.meta.env.BASE_URL}api/freeserp`.replace(/\/{2,}/g, '/');
 
 const CLIENT = {
   project: 'AI Radar',
@@ -31,18 +30,17 @@ export const SORT_OPTIONS = [
   { value: 'first_seen', label: 'First seen' },
 ];
 
-function buildUrl(base, params) {
+function buildUrl(params) {
   const search = new URLSearchParams();
   Object.entries({ ...CLIENT, ...params }).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return;
     search.set(key, String(value));
   });
-  return `${base}?${search.toString()}`;
+  return `${API_PATH}?${search.toString()}`;
 }
 
 async function get(params) {
-  const url = buildUrl(import.meta.env.DEV ? DEV_PROXY : API_URL, params);
-  const response = await fetch(url);
+  const response = await fetch(buildUrl(params));
 
   if (!response.ok) {
     throw new Error(`Could not reach FreeSerp (${response.status}). Try again.`);

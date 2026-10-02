@@ -2,12 +2,11 @@
 
 Search, filter, and compare AI startups using the public [FreeSerp](https://freeserp.ai/docs.php) API (`index=sites`, `ai_startups=1`).
 
-## Features
+## Why Netlify (not direct browser → FreeSerp)
 
-- Full-text search with niche chips and filters (DR, live date, sort)
-- Result list with summaries, Domain Rating, and stack signals
-- Compare up to three sites side by side
-- Site plan (goal, audience, structure)
+FreeSerp returns **two** `Access-Control-Allow-Origin: *` headers. Chrome shows **200 OK** in Network, but blocks JavaScript from reading the body (`Failed to fetch`).
+
+GitHub Pages cannot proxy requests. Netlify can: the browser calls **same-origin** `/api/freeserp`, and Netlify fetches FreeSerp server-side. No Cloudflare, no API key.
 
 ## Local development
 
@@ -16,27 +15,19 @@ npm install
 npm run dev
 ```
 
-## Production build
+Vite proxies `/api/freeserp` → FreeSerp locally.
 
-```bash
-npm run build
-# or:
-npm run build:gh
-```
+## Deploy (Netlify)
 
-## Deploy to GitHub Pages
+1. Open [https://app.netlify.com](https://app.netlify.com) → **Add new site** → **Import from Git** → select `boxq69/ai-radar`.
+2. Build settings are already in `netlify.toml` (`npm run build`, publish `dist`).
+3. Deploy. Your site URL will be like `https://<name>.netlify.app`.
 
-1. Push to `main` — GitHub Actions builds and deploys automatically.
-2. In **Settings → Pages**:
-   - **Source:** GitHub Actions
-3. Open: https://boxq69.github.io/ai-radar/
+That URL is the one that will load FreeSerp data correctly.
 
-If an old deploy is still visible, hard-refresh (Cmd+Shift+R).
-
-## API
+## API used
 
 ```text
-GET https://freeserp.ai/api.php?index=sites&ai_startups=1&q=...&sort=went_live&order=desc
+GET /api/freeserp?index=sites&ai_startups=1&sort=went_live&order=desc
+→ proxied to https://freeserp.ai/api.php
 ```
-
-No API key. The app calls FreeSerp directly from the browser.

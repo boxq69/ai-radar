@@ -1,0 +1,5 @@
+# Same-origin FreeSerp proxy (Netlify). Query string is forwarded automatically.
+/api/freeserp  https://freeserp.ai/api.php  200
+
+# SPA
+/*    /index.html   200

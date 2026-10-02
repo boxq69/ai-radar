@@ -1,0 +1,20 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  BASE_PATH = "/"
+
+# Same-origin proxy — browser talks to this site, Netlify fetches FreeSerp.
+# Avoids FreeSerp's duplicate Access-Control-Allow-Origin headers that Chrome rejects.
+[[redirects]]
+  from = "/api/freeserp"
+  to = "https://freeserp.ai/api.php"
+  status = 200
+  force = true
+
+# SPA fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
