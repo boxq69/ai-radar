@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "build:gh": "BASE_PATH=/ai-search/ vite build"
+    "build:gh": "BASE_PATH=/ai-radar/ vite build"
   },
   "devDependencies": {
     "vite": "^7.3.1"

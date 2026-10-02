@@ -1,8 +1,7 @@
 import { defineConfig } from 'vite';
 
-// GitHub Pages project sites need "/<repo>/". Override via BASE_PATH.
-// Example: BASE_PATH=/ai-search/ npm run build
-const base = process.env.BASE_PATH || '/';
+// GitHub Pages project URL: https://boxq69.github.io/ai-radar/
+const base = process.env.BASE_PATH || '/ai-radar/';
 
 export default defineConfig({
   base,
